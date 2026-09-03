@@ -1,4 +1,5 @@
 import type { Dataset } from '../types';
+import { SourceLogo, sourceLabel } from './SourceLogo';
 
 export function DatasetTable({ rows }: { rows: Dataset[] }) {
   return (
@@ -31,7 +32,12 @@ export function DatasetTable({ rows }: { rows: Dataset[] }) {
                 </a>
                 <p className="line-clamp-1 text-xs text-slate-500">{d.description}</p>
               </td>
-              <td className="px-3 py-2 text-xs">{d.source}</td>
+              <td className="px-3 py-2 text-xs">
+                <span className="inline-flex items-center gap-1.5 whitespace-nowrap">
+                  <SourceLogo source={d.source} size={18} />
+                  {sourceLabel(d.source)}
+                </span>
+              </td>
               <td className="px-3 py-2 font-mono">{d.downloads.toLocaleString()}</td>
               <td className="px-3 py-2 font-mono">
                 {(d.likes + d.votes).toLocaleString()}

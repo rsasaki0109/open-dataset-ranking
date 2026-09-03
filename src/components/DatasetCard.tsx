@@ -1,4 +1,5 @@
 import type { Dataset } from '../types';
+import { SourceLogo, sourceLabel } from './SourceLogo';
 
 function fmt(n: number): string {
   if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
@@ -28,9 +29,10 @@ export function DatasetCard({ d, rank }: { d: Dataset; rank?: number }) {
           </span>
         )}
         <span
-          className={`rounded-full px-2 py-0.5 font-medium ${sourceBadge(d.source)}`}
+          className={`inline-flex items-center gap-1.5 rounded-full py-0.5 pl-0.5 pr-2 font-medium ${sourceBadge(d.source)}`}
         >
-          {d.source === 'kaggle' ? 'Kaggle' : 'Hugging Face'}
+          <SourceLogo source={d.source} size={18} />
+          {sourceLabel(d.source)}
         </span>
         <span className="ml-auto font-mono text-slate-500 dark:text-slate-400">
           ★ {d.total_score.toFixed(2)}

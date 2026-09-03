@@ -3,6 +3,7 @@ import { DatasetCard } from './components/DatasetCard';
 import { DatasetTable } from './components/DatasetTable';
 import { FilterBar, type SourceFilter, type ViewMode } from './components/FilterBar';
 import { Section } from './components/Section';
+import { SourceLogo } from './components/SourceLogo';
 import { sortDatasets, type SortKey } from './lib/ranking';
 import { useDatasets } from './lib/useDatasets';
 import { useTheme } from './lib/useTheme';
@@ -132,7 +133,14 @@ export default function App() {
               </div>
             </Section>
 
-            <Section title="📦 Kaggle" subtitle="Top Kaggle datasets">
+            <Section
+              title={
+                <>
+                  <SourceLogo source="kaggle" size={24} /> Kaggle
+                </>
+              }
+              subtitle="Top Kaggle datasets"
+            >
               <div className={grid}>
                 {kaggle.map((d, i) => (
                   <DatasetCard key={d.id} d={d} rank={i + 1} />
@@ -140,7 +148,14 @@ export default function App() {
               </div>
             </Section>
 
-            <Section title="🤗 Hugging Face" subtitle="Top Hugging Face datasets">
+            <Section
+              title={
+                <>
+                  <SourceLogo source="huggingface" size={24} /> Hugging Face
+                </>
+              }
+              subtitle="Top Hugging Face datasets"
+            >
               <div className={grid}>
                 {hf.map((d, i) => (
                   <DatasetCard key={d.id} d={d} rank={i + 1} />
