@@ -27,6 +27,11 @@ from fetch_kaggle import fetch_kaggle  # noqa: E402
 from normalize import Dataset  # noqa: E402
 from ranking import score_all  # noqa: E402
 
+# Exact-match denylist for known non-dataset artifacts
+# (e.g. internal mirrors). Extend as needed.
+BLOCKLIST: set[str] = {
+    "hf:huggingface/documentation-images",
+}
 
 def load_existing(path: str) -> list[dict]:
     try:
@@ -43,8 +48,7 @@ def load_existing(path: str) -> list[dict]:
     return []
 
 
-def dict_to_dataset(d: dict) -> Dataset:
-    return Dataset(
+def dict_to_dataset(d: dict) -> Dataset:    return Dataset(
         id=str(d.get("id", "")),
         name=str(d.get("name", "")),
         source=str(d.get("source", "unknown")),
@@ -71,8 +75,11 @@ def merge(old: list[dict], hf: list[Dataset], kaggle: list[Dataset]) -> list[Dat
             continue
     # Fresh data overwrites same-id entries.
     for ds in list(hf) + list(kaggle):
-        if ds.id:
+        if ds.id and ds.id not in BLOCKLIST:
             merged[ds.id] = ds
+    # Drop blocklisted ids that came from old fallback data.
+    for bid in BLOCKLIST:
+        merged.pop(bid, None)
     # If HF fetch failed entirely, old HF entries survive via `old`.
     # Same for Kaggle (which is empty without secrets).
     return list(merged.values())
@@ -97,7 +104,7 @@ def atomic_write_json(path: str, payload: dict) -> None:
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--out", default="public/data/datasets.json")
-    ap.add_argument("--hf-pages", type=int, default=int(os.environ.get("HF_MAX_PAGES", "2")))
+    ap.add_argument("--hf-pages", type=int, default=int(os.environ.get("HF_MAX_PAGES", "5")))
     ap.add_argument("--kaggle-pages", type=int, default=int(os.environ.get("KAGGLE_PAGES", "3")))
     args = ap.parse_args()
 

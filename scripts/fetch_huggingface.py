@@ -21,7 +21,7 @@ from normalize import Dataset, normalize_huggingface  # noqa: E402
 
 API_URL = "https://huggingface.co/api/datasets"
 DEFAULT_LIMIT = 100
-DEFAULT_MAX_PAGES = 2  # 200 datasets max by default; raise via HF_MAX_PAGES
+DEFAULT_MAX_PAGES = 5  # ~500 datasets; raise via HF_MAX_PAGES
 RETRY = 3
 SLEEP_BETWEEN_CALLS = 1.0
 

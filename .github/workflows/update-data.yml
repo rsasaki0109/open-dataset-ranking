@@ -24,6 +24,8 @@ jobs:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
           KAGGLE_USERNAME: ${{ secrets.KAGGLE_USERNAME }}
           KAGGLE_KEY: ${{ secrets.KAGGLE_KEY }}
+          HF_MAX_PAGES: '5'
+          KAGGLE_PAGES: '3'
         run: python3 scripts/build.py --out public/data/datasets.json
 
       - name: Commit and push if changed
