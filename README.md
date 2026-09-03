@@ -2,6 +2,7 @@
 
 Cross-source ranking of public datasets from **Kaggle** and **Hugging Face**.
 Static site (React + Vite) served via **GitHub Pages**. Only **metadata** is stored — never dataset contents.
+The UI defaults to Japanese and can be switched to English from the header.
 
 ## Screenshots
 
@@ -33,6 +34,14 @@ total       = 0.5 * popularity + 0.2 * freshness + 0.3 * engagement
 - Change weights/constants in one place: top of `scripts/ranking.py` / `src/lib/ranking.ts`.
 - Sorting keys: `trending` (total), `popular` (popularity), `recent` (updated_at), `engagement`.
 - Sections: Trending / Most Popular / Recently Updated / Kaggle / Hugging Face + full Explore list.
+
+## Tag cleanup
+
+HF exposes many operational tags such as `library:`, `format:`, `region:` and
+`size_categories:`. The normalizer removes those from the public filter list,
+keeps useful `modality:` and `task_categories:` values, and converts language
+tags such as `language:ja` to `lang-ja`. The UI shows the 100 most frequent tags
+with at least two datasets, so the tag selector stays useful at scale.
 
 ### Common schema (`public/data/datasets.json`)
 

@@ -7,6 +7,7 @@ import { SourceLogo } from './components/SourceLogo';
 import { sortDatasets, type SortKey } from './lib/ranking';
 import { useDatasets } from './lib/useDatasets';
 import { useTheme } from './lib/useTheme';
+import { COPY, useLanguage } from './lib/i18n';
 
 const PAGE_SIZE = 12;
 
@@ -20,6 +21,8 @@ function matchesQuery(
 export default function App() {
   const { datasets, generatedAt, loading, error } = useDatasets();
   const [theme, toggleTheme] = useTheme();
+  const [language, toggleLanguage] = useLanguage();
+  const copy = COPY[language];
   const [query, setQuery] = useState('');
   const [source, setSource] = useState<SourceFilter>('all');
   const [tag, setTag] = useState('');
@@ -28,9 +31,15 @@ export default function App() {
   const [page, setPage] = useState(0);
 
   const allTags = useMemo(() => {
-    const s = new Set<string>();
-    for (const d of datasets) for (const t of d.tags) s.add(t);
-    return [...s].sort().slice(0, 100);
+    const counts = new Map<string, number>();
+    for (const d of datasets) {
+      for (const t of d.tags) counts.set(t, (counts.get(t) ?? 0) + 1);
+    }
+    return [...counts.entries()]
+      .filter(([, count]) => count >= 2)
+      .sort(([a, aCount], [b, bCount]) => bCount - aCount || a.localeCompare(b))
+      .slice(0, 100)
+      .map(([tagName]) => tagName);
   }, [datasets]);
 
   const filtered = useMemo(() => {
@@ -79,56 +88,63 @@ export default function App() {
         <div className="mx-auto flex max-w-6xl items-center gap-3 px-4 py-3">
           <span className="text-xl">📊</span>
           <div>
-            <h1 className="text-lg font-bold leading-tight">Open Dataset Ranking</h1>
+            <h1 className="text-lg font-bold leading-tight">{copy.siteTitle}</h1>
             <p className="text-xs text-slate-500 dark:text-slate-400">
-              Kaggle × Hugging Face · metadata only · daily update
+              {copy.siteSubtitle} · {copy.dailyUpdate}
             </p>
           </div>
+          <button
+            onClick={toggleLanguage}
+            className="rounded-lg border border-slate-300 px-3 py-1.5 text-sm dark:border-slate-600"
+            aria-label="Switch language"
+          >
+            {copy.languageSwitch}
+          </button>
           <button
             onClick={toggleTheme}
             className="ml-auto rounded-lg border border-slate-300 px-3 py-1.5 text-sm dark:border-slate-600"
             aria-label="Toggle dark mode"
           >
-            {theme === 'dark' ? '☀️ Light' : '🌙 Dark'}
+            {theme === 'dark' ? `☀️ ${copy.light}` : `🌙 ${copy.dark}`}
           </button>
         </div>
       </header>
 
       <main className="mx-auto max-w-6xl px-4 py-6">
-        {loading && <p className="py-10 text-center text-sm">Loading datasets…</p>}
+        {loading && <p className="py-10 text-center text-sm">{copy.loading}</p>}
         {error && (
           <p className="rounded-lg border border-red-300 bg-red-50 p-4 text-sm text-red-700">
-            Failed to load dataset data: {error}
+            {copy.loadError}: {error}
           </p>
         )}
 
         {!loading && !error && (
           <>
             <p className="mb-4 text-xs text-slate-500 dark:text-slate-400">
-              {datasets.length} datasets
-              {generatedAt ? ` · updated ${generatedAt.slice(0, 10)}` : ''}
+              {datasets.length} {copy.datasets}
+              {generatedAt ? ` · ${copy.updated} ${generatedAt.slice(0, 10)}` : ''}
             </p>
 
-            <Section title="🔥 Trending" subtitle="Top total score (popularity + freshness + engagement)">
+            <Section title={`🔥 ${copy.trending}`} subtitle={copy.trendingSubtitle}>
               <div className={grid}>
                 {trending.map((d, i) => (
-                  <DatasetCard key={d.id} d={d} rank={i + 1} />
+                  <DatasetCard key={d.id} d={d} rank={i + 1} copy={copy} />
                 ))}
               </div>
             </Section>
 
-            <Section title="🏆 Most Popular" subtitle="Top by download-based popularity score">
+            <Section title={`🏆 ${copy.popular}`} subtitle={copy.popularSubtitle}>
               <div className={grid}>
                 {popular.map((d, i) => (
-                  <DatasetCard key={d.id} d={d} rank={i + 1} />
+                  <DatasetCard key={d.id} d={d} rank={i + 1} copy={copy} />
                 ))}
               </div>
             </Section>
 
-            <Section title="🆕 Recently Updated" subtitle="Top by freshness score">
+            <Section title={`🆕 ${copy.recentlyUpdated}`} subtitle={copy.recentlyUpdatedSubtitle}>
               <div className={grid}>
                 {recent.map((d, i) => (
-                  <DatasetCard key={d.id} d={d} rank={i + 1} />
+                  <DatasetCard key={d.id} d={d} rank={i + 1} copy={copy} />
                 ))}
               </div>
             </Section>
@@ -136,14 +152,14 @@ export default function App() {
             <Section
               title={
                 <>
-                  <SourceLogo source="kaggle" size={24} /> Kaggle
+                  <SourceLogo source="kaggle" size={24} /> {copy.kaggle}
                 </>
               }
-              subtitle="Top Kaggle datasets"
+              subtitle={copy.topKaggle}
             >
               <div className={grid}>
                 {kaggle.map((d, i) => (
-                  <DatasetCard key={d.id} d={d} rank={i + 1} />
+                  <DatasetCard key={d.id} d={d} rank={i + 1} copy={copy} />
                 ))}
               </div>
             </Section>
@@ -151,21 +167,21 @@ export default function App() {
             <Section
               title={
                 <>
-                  <SourceLogo source="huggingface" size={24} /> Hugging Face
+                  <SourceLogo source="huggingface" size={24} /> {copy.huggingFace}
                 </>
               }
-              subtitle="Top Hugging Face datasets"
+              subtitle={copy.topHuggingFace}
             >
               <div className={grid}>
                 {hf.map((d, i) => (
-                  <DatasetCard key={d.id} d={d} rank={i + 1} />
+                  <DatasetCard key={d.id} d={d} rank={i + 1} copy={copy} />
                 ))}
               </div>
             </Section>
 
             <Section
-              title="🔍 Explore all datasets"
-              subtitle="Search, filter by source/tag, sort, and paginate"
+              title={`🔍 ${copy.explore}`}
+              subtitle={copy.exploreSubtitle}
             >
               <FilterBar
                 query={query}
@@ -188,21 +204,22 @@ export default function App() {
                 onSort={setSort}
                 view={view}
                 onView={setView}
+                copy={copy}
               />
 
               <p className="mb-3 text-sm text-slate-500">
-                {filtered.length} result{filtered.length === 1 ? '' : 's'} · page{' '}
+                {filtered.length} {copy.results} · {copy.page}{' '}
                 {safePage + 1} / {totalPages}
               </p>
 
               {view === 'card' ? (
                 <div className={grid}>
                   {pageRows.map((d, i) => (
-                    <DatasetCard key={d.id} d={d} rank={safePage * PAGE_SIZE + i + 1} />
+                    <DatasetCard key={d.id} d={d} rank={safePage * PAGE_SIZE + i + 1} copy={copy} />
                   ))}
                 </div>
               ) : (
-                <DatasetTable rows={pageRows} />
+                <DatasetTable rows={pageRows} copy={copy} />
               )}
 
               <div className="mt-4 flex items-center justify-center gap-2">
@@ -211,7 +228,7 @@ export default function App() {
                   onClick={() => setPage(safePage - 1)}
                   className="rounded-lg border border-slate-300 px-3 py-1.5 text-sm disabled:opacity-40 dark:border-slate-600"
                 >
-                  ← Prev
+                  ← {copy.prev}
                 </button>
                 <span className="text-sm text-slate-500">
                   {safePage + 1} / {totalPages}
@@ -221,7 +238,7 @@ export default function App() {
                   onClick={() => setPage(safePage + 1)}
                   className="rounded-lg border border-slate-300 px-3 py-1.5 text-sm disabled:opacity-40 dark:border-slate-600"
                 >
-                  Next →
+                  {copy.next} →
                 </button>
               </div>
             </Section>
@@ -231,7 +248,7 @@ export default function App() {
 
       <footer className="border-t border-slate-200 py-6 text-center text-xs text-slate-500 dark:border-slate-700 dark:text-slate-400">
         <p>
-          Metadata only — datasets belong to their owners on Kaggle / Hugging Face.
+          {copy.metadataNotice}
         </p>
         <p className="mt-1">
           <a
@@ -240,7 +257,7 @@ export default function App() {
             target="_blank"
             rel="noopener noreferrer"
           >
-            GitHub: open-dataset-ranking
+            {copy.github}
           </a>
         </p>
       </footer>

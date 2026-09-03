@@ -1,5 +1,6 @@
 import type { DatasetSource } from '../types';
 import type { SortKey } from '../lib/ranking';
+import type { Copy } from '../lib/i18n';
 
 export type SourceFilter = 'all' | DatasetSource;
 export type ViewMode = 'card' | 'table';
@@ -16,6 +17,7 @@ interface Props {
   onSort: (v: SortKey) => void;
   view: ViewMode;
   onView: (v: ViewMode) => void;
+  copy: Copy;
 }
 
 const SOURCES: { value: SourceFilter; label: string }[] = [
@@ -37,17 +39,17 @@ export function FilterBar(p: Props) {
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <label className="block">
           <span className="mb-1 block text-xs font-medium text-slate-500">
-            Keyword search
+            {p.copy.keywordSearch}
           </span>
           <input
             value={p.query}
             onChange={(e) => p.onQuery(e.target.value)}
-            placeholder="e.g. image, nlp, titanic…"
+            placeholder={p.copy.searchPlaceholder}
             className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-900"
           />
         </label>
         <label className="block">
-          <span className="mb-1 block text-xs font-medium text-slate-500">Source</span>
+          <span className="mb-1 block text-xs font-medium text-slate-500">{p.copy.source}</span>
           <select
             value={p.source}
             onChange={(e) => p.onSource(e.target.value as SourceFilter)}
@@ -55,21 +57,21 @@ export function FilterBar(p: Props) {
           >
             {SOURCES.map((s) => (
               <option key={s.value} value={s.value}>
-                {s.label}
+                {s.value === 'all' ? p.copy.allSources : s.label}
               </option>
             ))}
           </select>
         </label>
         <label className="block">
           <span className="mb-1 block text-xs font-medium text-slate-500">
-            Tag / category
+            {p.copy.tagCategory}
           </span>
           <select
             value={p.tag}
             onChange={(e) => p.onTag(e.target.value)}
             className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm dark:border-slate-600 dark:bg-slate-900"
           >
-            <option value="">All tags</option>
+            <option value="">{p.copy.allTags}</option>
             {p.allTags.map((t) => (
               <option key={t} value={t}>
                 {t}
@@ -78,7 +80,7 @@ export function FilterBar(p: Props) {
           </select>
         </label>
         <label className="block">
-          <span className="mb-1 block text-xs font-medium text-slate-500">Sort</span>
+          <span className="mb-1 block text-xs font-medium text-slate-500">{p.copy.sort}</span>
           <select
             value={p.sort}
             onChange={(e) => p.onSort(e.target.value as SortKey)}
@@ -86,7 +88,7 @@ export function FilterBar(p: Props) {
           >
             {SORTS.map((s) => (
               <option key={s.value} value={s.value}>
-                {s.label}
+                {s.value === 'trending' ? p.copy.trending : s.value === 'popular' ? p.copy.mostPopular : s.value === 'recent' ? p.copy.recently : p.copy.mostEngaged}
               </option>
             ))}
           </select>
@@ -102,7 +104,7 @@ export function FilterBar(p: Props) {
               : 'border border-slate-300 dark:border-slate-600'
           }`}
         >
-          Cards
+          {p.copy.cards}
         </button>
         <button
           onClick={() => p.onView('table')}
@@ -113,7 +115,7 @@ export function FilterBar(p: Props) {
               : 'border border-slate-300 dark:border-slate-600'
           }`}
         >
-          Table
+          {p.copy.table}
         </button>
       </div>
     </div>

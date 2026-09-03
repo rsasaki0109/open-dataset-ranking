@@ -1,5 +1,6 @@
 import type { Dataset } from '../types';
 import { SourceLogo, sourceLabel } from './SourceLogo';
+import type { Copy } from '../lib/i18n';
 
 function fmt(n: number): string {
   if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
@@ -19,7 +20,7 @@ function sourceBadge(source: Dataset['source']): string {
     : 'bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200';
 }
 
-export function DatasetCard({ d, rank }: { d: Dataset; rank?: number }) {
+export function DatasetCard({ d, rank, copy }: { d: Dataset; rank?: number; copy: Copy }) {
   return (
     <article className="flex flex-col rounded-xl border border-slate-200 bg-white p-4 shadow-sm transition hover:shadow-md dark:border-slate-700 dark:bg-slate-800">
       <div className="mb-2 flex items-center gap-2 text-xs">
@@ -49,7 +50,7 @@ export function DatasetCard({ d, rank }: { d: Dataset; rank?: number }) {
         </a>
       </h3>
       <p className="mb-3 line-clamp-3 text-sm text-slate-600 dark:text-slate-300">
-        {d.description || 'No description.'}
+        {d.description || copy.noDescription}
       </p>
       <div className="mb-3 flex flex-wrap gap-1">
         {d.tags.slice(0, 5).map((t) => (
@@ -63,25 +64,27 @@ export function DatasetCard({ d, rank }: { d: Dataset; rank?: number }) {
       </div>
       <dl className="mt-auto grid grid-cols-3 gap-1 text-xs text-slate-500 dark:text-slate-400">
         <div>
-          <dt>Downloads</dt>
+          <dt>{copy.downloads}</dt>
           <dd className="font-semibold text-slate-800 dark:text-slate-100">
             {fmt(d.downloads)}
           </dd>
         </div>
         <div>
-          <dt>Likes/Votes</dt>
+          <dt>{copy.likesVotes}</dt>
           <dd className="font-semibold text-slate-800 dark:text-slate-100">
             {fmt(d.likes + d.votes)}
           </dd>
         </div>
         <div>
-          <dt>Updated</dt>
+          <dt>{copy.updated}</dt>
           <dd className="font-semibold text-slate-800 dark:text-slate-100">
             {fmtDate(d.updated_at)}
           </dd>
         </div>
       </dl>
-      <p className="mt-2 truncate text-xs text-slate-400">{d.license || 'unknown license'}</p>
+      <p className="mt-2 truncate text-xs text-slate-400" title={`${copy.license}: ${d.license}`}>
+        {copy.license}: {d.license || 'unknown'}
+      </p>
     </article>
   );
 }

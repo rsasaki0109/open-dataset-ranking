@@ -1,20 +1,21 @@
 import type { Dataset } from '../types';
 import { SourceLogo, sourceLabel } from './SourceLogo';
+import type { Copy } from '../lib/i18n';
 
-export function DatasetTable({ rows }: { rows: Dataset[] }) {
+export function DatasetTable({ rows, copy }: { rows: Dataset[]; copy: Copy }) {
   return (
     <div className="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-700">
       <table className="w-full min-w-[760px] text-left text-sm">
         <thead className="bg-slate-50 text-xs uppercase text-slate-500 dark:bg-slate-800 dark:text-slate-400">
           <tr>
             <th className="px-3 py-2">#</th>
-            <th className="px-3 py-2">Name</th>
-            <th className="px-3 py-2">Source</th>
-            <th className="px-3 py-2">Downloads</th>
-            <th className="px-3 py-2">Likes/Votes</th>
-            <th className="px-3 py-2">Updated</th>
-            <th className="px-3 py-2">License</th>
-            <th className="px-3 py-2">Score</th>
+            <th className="px-3 py-2">{copy.datasets}</th>
+            <th className="px-3 py-2">{copy.source}</th>
+            <th className="px-3 py-2">{copy.downloads}</th>
+            <th className="px-3 py-2">{copy.likesVotes}</th>
+            <th className="px-3 py-2">{copy.updated}</th>
+            <th className="px-3 py-2">{copy.license}</th>
+            <th className="px-3 py-2">{copy.score}</th>
           </tr>
         </thead>
         <tbody className="divide-y divide-slate-100 bg-white dark:divide-slate-700 dark:bg-slate-900">

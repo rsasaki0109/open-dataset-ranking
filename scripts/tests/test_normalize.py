@@ -53,6 +53,49 @@ class TestNormalize(unittest.TestCase):
         d2 = normalize_kaggle({})
         self.assertEqual(d2.votes, 0)
 
+    def test_tag_namespaces(self) -> None:
+        d = normalize_huggingface(
+            {
+                "id": "x",
+                "tags": [
+                    "modality:image",
+                    "task_categories:object-detection",
+                    "language:ja",
+                    "library:pandas",
+                    "region:us",
+                    "format:parquet",
+                    "size_categories:10k<n<100k",
+                    "license:mit",
+                    "arxiv:2401.00001",
+                    "source_datasets:original",
+                    "Vision",
+                ],
+            }
+        )
+        self.assertIn("image", d.tags)
+        self.assertIn("object-detection", d.tags)
+        self.assertIn("lang-ja", d.tags)
+        self.assertIn("vision", d.tags)
+        for noisy in ("library:pandas", "region:us", "format:parquet", "license:mit"):
+            self.assertNotIn(noisy, d.tags)
+        self.assertFalse(any("arxiv" in t or "<" in t for t in d.tags))
+
+    def test_tag_noise_dropped(self) -> None:
+        d = normalize_huggingface(
+            {
+                "id": "x",
+                "tags": [
+                    "has spaces",
+                    "https://example.com/x",
+                    "mail@example.com",
+                    "x" * 31,
+                    "nlp",
+                    "NLP",
+                ],
+            }
+        )
+        self.assertEqual(d.tags, ["nlp"])
+
 
 if __name__ == "__main__":
     unittest.main()

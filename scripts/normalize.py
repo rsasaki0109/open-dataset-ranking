@@ -49,13 +49,44 @@ def _clean_text(value: object, limit: int = 500) -> str:
     return text[:limit]
 
 
-def _clean_tags(values: object, limit: int = 10) -> list[str]:
+# HF tags are mostly `namespace:value` infra metadata (library:, region:, ...).
+# Only these namespaces produce useful filter tags:
+#   modality:image            -> "image"
+#   task_categories:qa        -> "qa" (value kept as-is, e.g. "question-answering")
+#   language:ja               -> "lang-ja" (prefixed so it reads well in the UI)
+_TAG_VALUE_NAMESPACES = frozenset({"modality", "task_categories"})
+_TAG_LANG_NAMESPACE = "language"
+# Exact values that slip through but carry no meaning.
+_TAG_DROP_EXACT = frozenset({"lang-code", "lang-multilingual"})
+
+
+def _clean_one_tag(value: str) -> str | None:
+    t = value.strip().lower()
+    if not t or " " in t or "://" in t or "@" in t:
+        return None
+    if ":" in t:
+        ns, _, val = t.partition(":")
+        val = val.strip()
+        if not val:
+            return None
+        if ns in _TAG_VALUE_NAMESPACES:
+            t = val
+        elif ns == _TAG_LANG_NAMESPACE:
+            t = f"lang-{val}"
+        else:
+            return None  # library:, region:, format:, size_categories:, arxiv:, ... → noise
+    if len(t) > 30 or t in _TAG_DROP_EXACT:
+        return None
+    return t
+
+
+def _clean_tags(values: object, limit: int = 12) -> list[str]:
     if not isinstance(values, (list, tuple)):
         return []
     out: list[str] = []
     for v in values:
         if isinstance(v, str):
-            t = v.strip().lower()[:40]
+            t = _clean_one_tag(v)
             if t and t not in out:
                 out.append(t)
         if len(out) >= limit:
