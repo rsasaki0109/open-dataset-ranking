@@ -21,7 +21,7 @@ from normalize import Dataset, normalize_huggingface  # noqa: E402
 
 API_URL = "https://huggingface.co/api/datasets"
 DEFAULT_LIMIT = 100
-DEFAULT_MAX_PAGES = 5  # ~500 datasets; raise via HF_MAX_PAGES
+DEFAULT_MAX_PAGES = 8  # ~800 datasets; raise via HF_MAX_PAGES
 RETRY = 3
 SLEEP_BETWEEN_CALLS = 1.0
 
@@ -96,6 +96,53 @@ def fetch_huggingface(
             break
     print(f"[hf] fetched {len(out)} datasets", file=sys.stderr)
     return out
+
+
+def fetch_by_ids(ids: list[str], token: str | None = None) -> list[Dataset]:
+    """Resolve curated dataset IDs via GET /api/datasets/{id}.
+
+    Unknown IDs (404) and failures are skipped with a warning so a stale
+    seed list never breaks the build.
+    """
+    token = token or os.environ.get("HF_TOKEN")
+    headers = {
+        "User-Agent": "open-dataset-ranking/0.1",
+        "Accept": "application/json",
+        **({"Authorization": f"Bearer {token}"} if token else {}),
+    }
+    out: list[Dataset] = []
+    skipped = 0
+    for ds_id in ids:
+        url = f"{API_URL}/{urllib.parse.quote(ds_id, safe='/')}"
+        try:
+            req = urllib.request.Request(url, headers=headers)
+            with urllib.request.urlopen(req, timeout=30) as res:
+                raw = json.loads(res.read().decode("utf-8"))
+            if isinstance(raw, dict):
+                out.append(normalize_huggingface(raw))
+            else:
+                skipped += 1
+        except Exception as e:  # noqa: BLE001
+            print(f"[hf] skip seed {ds_id!r}: {e}", file=sys.stderr)
+            skipped += 1
+        time.sleep(0.5)
+    print(f"[hf] resolved {len(out)} seeded datasets ({skipped} skipped)", file=sys.stderr)
+    return out
+
+
+def load_seed_ids(path: str) -> list[str]:
+    """Read one dataset ID per line; '#' starts a comment."""
+    ids: list[str] = []
+    try:
+        with open(path, encoding="utf-8") as f:
+            for line in f:
+                line = line.strip()
+                if line and not line.startswith("#"):
+                    ids.append(line)
+    except FileNotFoundError:
+        print(f"[hf] seed file not found: {path}", file=sys.stderr)
+    # De-dupe, preserve order.
+    return list(dict.fromkeys(ids))
 
 
 def main() -> int:

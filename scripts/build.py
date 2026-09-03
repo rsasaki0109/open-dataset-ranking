@@ -22,7 +22,7 @@ from datetime import datetime, timezone
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from fetch_huggingface import fetch_huggingface  # noqa: E402
+from fetch_huggingface import fetch_by_ids, fetch_huggingface, load_seed_ids  # noqa: E402
 from fetch_kaggle import fetch_kaggle  # noqa: E402
 from normalize import Dataset  # noqa: E402
 from ranking import score_all  # noqa: E402
@@ -104,8 +104,14 @@ def atomic_write_json(path: str, payload: dict) -> None:
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--out", default="public/data/datasets.json")
-    ap.add_argument("--hf-pages", type=int, default=int(os.environ.get("HF_MAX_PAGES", "5")))
+    ap.add_argument("--hf-pages", type=int, default=int(os.environ.get("HF_MAX_PAGES", "8")))
     ap.add_argument("--kaggle-pages", type=int, default=int(os.environ.get("KAGGLE_PAGES", "3")))
+    ap.add_argument(
+        "--seed-file",
+        action="append",
+        default=[],
+        help="Curated HF id list (repeatable). Defaults to scripts/seed_lists/*.txt.",
+    )
     args = ap.parse_args()
 
     old = load_existing(args.out)
@@ -120,15 +126,32 @@ def main() -> int:
     except Exception as e:  # noqa: BLE001
         print(f"[build] Kaggle fetch failed, keeping old Kaggle entries: {e}", file=sys.stderr)
         kaggle = []
+    # Curated seeds (e.g. vision benchmarks that ranking-by-likes may miss).
+    scripts_dir = os.path.dirname(os.path.abspath(__file__))
+    seed_dir = os.path.join(scripts_dir, "seed_lists")
+    if args.seed_file:
+        seed_files = args.seed_file
+    elif os.path.isdir(seed_dir):
+        seed_files = sorted(
+            os.path.join(seed_dir, f) for f in os.listdir(seed_dir) if f.endswith(".txt")
+        )
+    else:
+        seed_files = []
+    seeds: list[Dataset] = []
+    for sf in seed_files:
+        try:
+            seeds += fetch_by_ids(load_seed_ids(sf))
+        except Exception as e:  # noqa: BLE001
+            print(f"[build] seed file failed ({sf}), skipping: {e}", file=sys.stderr)
 
-    if not hf and not kaggle and not old:
+    if not hf and not kaggle and not seeds and not old:
         print("[build] ERROR: no data from any source and no fallback.", file=sys.stderr)
         return 1
-    if not hf and not kaggle:
+    if not hf and not kaggle and not seeds:
         print("[build] WARNING: all fetches failed; keeping existing JSON untouched.", file=sys.stderr)
         return 0
 
-    merged = merge(old, hf, kaggle)
+    merged = merge(old, hf + seeds, kaggle)
     scored = score_all(merged)
     scored.sort(key=lambda d: d.total_score, reverse=True)
     payload = {

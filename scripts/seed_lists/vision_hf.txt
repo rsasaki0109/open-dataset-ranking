@@ -1,0 +1,67 @@
+# Curated Hugging Face dataset IDs for Vision work.
+# One ID per line; lines starting with # are ignored.
+# IDs that 404 or fail to resolve are skipped with a warning (see build logs).
+# Extend freely: <org>/<name> as shown in the dataset URL.
+
+# --- Classification benchmarks ---
+cifar10
+cifar100
+mnist
+fashion_mnist
+food101
+beans
+oxford-iiit-pet
+eurosat
+gtsrb
+fer2013
+stl10
+svhn
+imagenet-1k
+# --- Detection / Segmentation ---
+coco
+cityscapes
+ade20k
+voc
+lvis
+open-images
+dota
+# --- Faces / People ---
+celeba
+ffhq
+wider_face
+# --- VQA / Document / Chart ---
+vqav2
+flickr30k
+lmms-lab/DocVQA
+chartqa
+textvqa
+# --- Autonomous driving / Street ---
+kitti
+bdd100k
+mapillary-vistas
+# --- Medical imaging ---
+chestxray14
+oct
+camelyon
+isic
+# --- Video ---
+ucf101
+hmdb51
+kinetics400
+something-something-v2
+# --- Remote sensing ---
+ucmerced
+resisc45
+# --- Robustness variants ---
+imagenet-sketch
+imagenet-a
+imagenet-r
+objectnet
+inaturalist
+cub200
+stanford-cars
+oxford_flowers102
+places365
+sun397
+lsun
+celeba-hq
