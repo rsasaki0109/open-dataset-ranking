@@ -1,3 +1,5 @@
+import { useState } from 'react';
+import { PreviewGallery } from './PreviewGallery';
 import type { Dataset } from '../types';
 import { SourceLogo, sourceLabel } from './SourceLogo';
 import type { Copy } from '../lib/i18n';
@@ -21,6 +23,8 @@ function sourceBadge(source: Dataset['source']): string {
 }
 
 export function DatasetCard({ d, rank, copy }: { d: Dataset; rank?: number; copy: Copy }) {
+  const [showPreview, setShowPreview] = useState(false);
+  const canPreview = d.source === 'huggingface' && d.tags.includes('image');
   return (
     <article className="flex flex-col rounded-xl border border-slate-200 bg-white p-4 shadow-sm transition hover:shadow-md dark:border-slate-700 dark:bg-slate-800">
       <div className="mb-2 flex items-center gap-2 text-xs">
@@ -52,6 +56,18 @@ export function DatasetCard({ d, rank, copy }: { d: Dataset; rank?: number; copy
       <p className="mb-3 line-clamp-3 text-sm text-slate-600 dark:text-slate-300">
         {d.description || copy.noDescription}
       </p>
+      {canPreview && (
+        <div className="mb-3">
+          <button
+            type="button"
+            onClick={() => setShowPreview((v) => !v)}
+            className="mb-2 text-xs font-medium text-sky-700 hover:underline dark:text-sky-300"
+          >
+            🖼 {showPreview ? copy.hidePreview : copy.preview}
+          </button>
+          {showPreview && <PreviewGallery hfId={d.id.slice(3)} copy={copy} />}
+        </div>
+      )}
       <div className="mb-3 flex flex-wrap gap-1">
         {d.tags.slice(0, 5).map((t) => (
           <span
