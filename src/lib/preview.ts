@@ -40,12 +40,49 @@ function isImageCell(v: unknown): v is PreviewImage {
   );
 }
 
+const HF = 'https://huggingface.co';
+const MAX_GIF_BYTES = 3 * 1024 * 1024; // skip huge animations
+
+interface TreeEntry {
+  type: string;
+  path: string;
+  size?: number;
+}
+
+/**
+ * GIFs stored as plain files in the dataset repo. datasets-server re-encodes
+ * images to static PNG/JPEG, so animation is only preserved by hotlinking the
+ * original file (resolve/main/... is public and sends CORS `*`).
+ */
+async function fetchRepoGifs(
+  hfId: string,
+  limit: number,
+  signal?: AbortSignal,
+): Promise<PreviewImage[]> {
+  const tree = await getJson<TreeEntry[]>(`${HF}/api/datasets/${hfId}/tree/main?recursive=true`, signal);
+  return tree
+    .filter((f) => f.type === 'file' && /\.gif$/i.test(f.path) && (f.size ?? 0) <= MAX_GIF_BYTES)
+    .slice(0, limit)
+    .map((f) => ({
+      src: `${HF}/datasets/${hfId}/resolve/main/${f.path.split('/').map(encodeURIComponent).join('/')}`,
+      width: 0,
+      height: 0,
+    }));
+}
+
 /** Returns up to `limit` sample images for an HF dataset id (e.g. "cifar10"). */
 export async function fetchPreview(
   hfId: string,
   limit = 8,
   signal?: AbortSignal,
 ): Promise<PreviewImage[]> {
+  try {
+    const gifs = await fetchRepoGifs(hfId, limit, signal);
+    if (gifs.length > 0) return gifs;
+  } catch (e) {
+    if ((e as Error).name === 'AbortError') throw e;
+    // no repo listing (gated / not found): fall back to datasets-server
+  }
   const ds = encodeURIComponent(hfId);
   const splits = await getJson<{ splits?: { config: string; split: string }[] }>(
     `${API}/splits?dataset=${ds}`,
