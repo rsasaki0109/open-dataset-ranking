@@ -35,6 +35,14 @@ total       = 0.5 * popularity + 0.2 * freshness + 0.3 * engagement
 - Sorting keys: `trending` (total), `popular` (popularity), `recent` (updated_at), `engagement`.
 - Sections: Trending / Most Popular / Recently Updated / Kaggle / Hugging Face + full Explore list.
 
+## Image / GIF preview
+
+Hugging Face datasets tagged `image` show a **🖼 Preview images** toggle on their card.
+The browser fetches up to 8 sample images (GIFs animate) on demand from the public
+[datasets-server](https://datasets-server.huggingface.co) API and hotlinks them from
+Hugging Face — nothing is stored in this repo (metadata only). Click a thumbnail to
+enlarge. Kaggle has no public preview API, so Kaggle cards have no preview.
+
 ## Tag cleanup
 
 HF exposes many operational tags such as `library:`, `format:`, `region:` and

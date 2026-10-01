@@ -48,6 +48,11 @@ export interface Copy {
   metadataNotice: string;
   github: string;
   languageSwitch: string;
+  preview: string;
+  hidePreview: string;
+  previewLoading: string;
+  previewError: string;
+  previewEmpty: string;
 }
 
 export const COPY: Record<Language, Copy> = {
@@ -61,6 +66,7 @@ export const COPY: Record<Language, Copy> = {
     source: 'ソース', allSources: 'すべてのソース', tagCategory: 'タグ / カテゴリ', allTags: 'すべてのタグ', sort: '並び順', mostPopular: '人気順', recently: '更新が新しい順', mostEngaged: '反応の多い順',
     cards: 'カード', table: 'テーブル', results: '件', page: 'ページ', prev: '前へ', next: '次へ', noDescription: '説明なし', downloads: 'ダウンロード', likesVotes: 'Likes / Votes', license: 'ライセンス', score: 'スコア',
     metadataNotice: 'メタデータのみ掲載。データセット本体は各提供元から取得してください。', github: 'GitHub: open-dataset-ranking', languageSwitch: 'English',
+    preview: '画像プレビュー', hidePreview: 'プレビューを閉じる', previewLoading: 'プレビューを読み込み中…', previewError: 'プレビューを取得できませんでした', previewEmpty: 'プレビューできる画像がありません',
   },
   en: {
     siteTitle: 'Open Dataset Ranking', siteSubtitle: 'Kaggle × Hugging Face', dailyUpdate: 'metadata only · daily update',
@@ -68,6 +74,7 @@ export const COPY: Record<Language, Copy> = {
     popular: 'Most Popular', popularSubtitle: 'Top by download-based popularity score', recentlyUpdated: 'Recently Updated', recentlyUpdatedSubtitle: 'Top by freshness score', kaggle: 'Kaggle', huggingFace: 'Hugging Face', topKaggle: 'Top Kaggle datasets', topHuggingFace: 'Top Hugging Face datasets',
     explore: 'Explore all datasets', exploreSubtitle: 'Search, filter by source/tag, sort, and paginate', keywordSearch: 'Keyword search', searchPlaceholder: 'e.g. image, nlp, sales…', source: 'Source', allSources: 'All sources', tagCategory: 'Tag / category', allTags: 'All tags', sort: 'Sort', mostPopular: 'Most popular', recently: 'Recently updated', mostEngaged: 'Most engaged',
     cards: 'Cards', table: 'Table', results: 'results', page: 'page', prev: 'Prev', next: 'Next', noDescription: 'No description.', downloads: 'Downloads', likesVotes: 'Likes / Votes', license: 'License', score: 'Score', metadataNotice: 'Metadata only. Get the dataset itself from its original provider.', github: 'GitHub: open-dataset-ranking', languageSwitch: '日本語',
+    preview: 'Preview images', hidePreview: 'Hide preview', previewLoading: 'Loading preview…', previewError: 'Could not load preview', previewEmpty: 'No previewable images',
   },
 };
 
