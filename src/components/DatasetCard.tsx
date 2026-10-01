@@ -16,7 +16,7 @@ function fmtDate(iso: string): string {
   return new Date(t).toISOString().slice(0, 10);
 }
 
-// Tags that suggest image/GIF/video-frame content (e.g. "vision", "image-classification").
+// Tags that suggest image/GIF/video-frame content (e.g. "vision", "image-classification"), or a name containing "gif".
 const VISUAL_TAG = /image|vision|photo|video|gif|ocr|segmentation|detection|diffusion/;
 
 function sourceBadge(source: Dataset['source']): string {
@@ -27,7 +27,7 @@ function sourceBadge(source: Dataset['source']): string {
 
 export function DatasetCard({ d, rank, copy }: { d: Dataset; rank?: number; copy: Copy }) {
   const [showPreview, setShowPreview] = useState(false);
-  const canPreview = d.source === 'huggingface' && d.tags.some((t) => VISUAL_TAG.test(t));
+  const canPreview = d.source === 'huggingface' && d.tags.some((t) => VISUAL_TAG.test(t)) || /gif/i.test(d.name);
   return (
     <article className="flex flex-col rounded-xl border border-slate-200 bg-white p-4 shadow-sm transition hover:shadow-md dark:border-slate-700 dark:bg-slate-800">
       <div className="mb-2 flex items-center gap-2 text-xs">

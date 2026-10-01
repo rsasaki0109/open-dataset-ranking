@@ -37,11 +37,12 @@ total       = 0.5 * popularity + 0.2 * freshness + 0.3 * engagement
 
 ## Image / GIF preview
 
-Hugging Face datasets tagged `image` show a **🖼 Preview images** toggle on their card.
+Hugging Face datasets with vision-related tags (`image`, `vision`, `video`, …) or `gif` in the name show a **🖼 Preview images** toggle on their card.
 The browser fetches up to 8 sample images (GIFs animate) on demand from the public
 [datasets-server](https://datasets-server.huggingface.co) API and hotlinks them from
-Hugging Face — nothing is stored in this repo (metadata only). Click a thumbnail to
-enlarge. Kaggle has no public preview API, so Kaggle cards have no preview.
+Hugging Face — nothing is stored in this repo (metadata only). If the dataset repo contains `.gif` files (≤ 3 MB each) they are linked directly so
+they animate (datasets-server only returns static re-encoded frames). Click a
+thumbnail to enlarge. Kaggle has no public preview API, so Kaggle cards have no preview.
 
 ## Tag cleanup
 
