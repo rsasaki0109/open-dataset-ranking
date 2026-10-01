@@ -41,15 +41,31 @@ export function PreviewGallery({ hfId, copy }: { hfId: string; copy: Copy }) {
             key={i}
             type="button"
             onClick={() => setZoom(img)}
-            className="aspect-square overflow-hidden rounded bg-slate-100 dark:bg-slate-700"
+            className="relative aspect-square overflow-hidden rounded bg-slate-100 dark:bg-slate-700"
           >
-            <img
-              src={img.src}
-              alt=""
-              loading="lazy"
-              referrerPolicy="no-referrer"
-              className="h-full w-full object-cover"
-            />
+            {img.kind === 'video' ? (
+              <>
+                {/* #t=0.1 makes browsers paint a poster frame without downloading the whole file */}
+                <video
+                  src={`${img.src}#t=0.1`}
+                  muted
+                  playsInline
+                  preload="metadata"
+                  className="pointer-events-none h-full w-full object-cover"
+                />
+                <span className="pointer-events-none absolute bottom-1 right-1 rounded bg-black/60 px-1 text-[10px] leading-4 text-white">
+                  ▶
+                </span>
+              </>
+            ) : (
+              <img
+                src={img.src}
+                alt=""
+                loading="lazy"
+                referrerPolicy="no-referrer"
+                className="h-full w-full object-cover"
+              />
+            )}
           </button>
         ))}
       </div>
@@ -60,12 +76,24 @@ export function PreviewGallery({ hfId, copy }: { hfId: string; copy: Copy }) {
           onClick={() => setZoom(null)}
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4"
         >
-          <img
-            src={zoom.src}
-            alt=""
-            referrerPolicy="no-referrer"
-            className="max-h-full max-w-full rounded"
-          />
+          {zoom.kind === 'video' ? (
+            <video
+              src={zoom.src}
+              controls
+              autoPlay
+              loop
+              playsInline
+              onClick={(e) => e.stopPropagation()}
+              className="max-h-full max-w-full rounded"
+            />
+          ) : (
+            <img
+              src={zoom.src}
+              alt=""
+              referrerPolicy="no-referrer"
+              className="max-h-full max-w-full rounded"
+            />
+          )}
         </div>
       )}
     </>

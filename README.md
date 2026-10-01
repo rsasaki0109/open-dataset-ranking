@@ -35,13 +35,13 @@ total       = 0.5 * popularity + 0.2 * freshness + 0.3 * engagement
 - Sorting keys: `trending` (total), `popular` (popularity), `recent` (updated_at), `engagement`.
 - Sections: Trending / Most Popular / Recently Updated / Kaggle / Hugging Face + full Explore list.
 
-## Image / GIF preview
+## Image / GIF / video preview
 
-Hugging Face datasets with vision-related tags (`image`, `vision`, `video`, …) or `gif` in the name show a **🖼 Preview images** toggle on their card.
+Hugging Face datasets with vision-related tags (`image`, `vision`, `video`, …) or `gif` in the name show a **🖼 Preview images / videos** toggle on their card.
 The browser fetches up to 8 sample images (GIFs animate) on demand from the public
 [datasets-server](https://datasets-server.huggingface.co) API and hotlinks them from
 Hugging Face — nothing is stored in this repo (metadata only). If the dataset repo contains `.gif` files (≤ 3 MB each) they are linked directly so
-they animate (datasets-server only returns static re-encoded frames). Click a
+they animate (datasets-server only returns static re-encoded frames). Repo `.mp4`/`.webm` files (≤ 25 MB) and datasets-server `Video` columns show a ▶ poster frame and play in the enlarged view; repo `.png/.jpg/.webp` files are used when present. Click a
 thumbnail to enlarge. Kaggle has no public preview API, so Kaggle cards have no preview.
 
 ## Tag cleanup

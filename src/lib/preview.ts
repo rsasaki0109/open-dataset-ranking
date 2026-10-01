@@ -1,4 +1,4 @@
-// Client-side preview of image/GIF samples via the public Hugging Face
+// Client-side preview of image/GIF/video samples via the public Hugging Face
 // datasets-server. Fetched on demand in the browser; nothing is stored in
 // this repo (metadata only), images are hotlinked from Hugging Face.
 const API = 'https://datasets-server.huggingface.co';
@@ -7,6 +7,8 @@ export interface PreviewImage {
   src: string;
   width: number;
   height: number;
+  /** 'video' items are rendered with <video>; everything else (incl. GIF) with <img>. */
+  kind?: 'image' | 'video';
 }
 
 interface Feature {
@@ -31,7 +33,7 @@ async function getJson<T>(url: string, signal?: AbortSignal): Promise<T> {
   return (await res.json()) as T;
 }
 
-function isImageCell(v: unknown): v is PreviewImage {
+function isMediaCell(v: unknown): v is PreviewImage {
   return (
     typeof v === 'object' &&
     v !== null &&
@@ -42,6 +44,8 @@ function isImageCell(v: unknown): v is PreviewImage {
 
 const HF = 'https://huggingface.co';
 const MAX_GIF_BYTES = 3 * 1024 * 1024; // skip huge animations
+const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
+const MAX_VIDEO_BYTES = 25 * 1024 * 1024; // only played on click (range-streamed)
 
 interface TreeEntry {
   type: string;
@@ -49,25 +53,34 @@ interface TreeEntry {
   size?: number;
 }
 
+const IMAGE_EXT = /\.(png|jpe?g|webp)$/i;
+const VIDEO_EXT = /\.(mp4|webm)$/i;
+const GIF_EXT = /\.gif$/i;
+
 /**
- * GIFs stored as plain files in the dataset repo. datasets-server re-encodes
- * images to static PNG/JPEG, so animation is only preserved by hotlinking the
- * original file (resolve/main/... is public and sends CORS `*`).
+ * Media stored as plain files in the dataset repo. datasets-server re-encodes
+ * images to static PNG/JPEG and does not serve videos, so animation/video is
+ * only preserved by hotlinking the original file (resolve/main/... is public
+ * and sends CORS `*`). Animated/video files are listed before still images.
  */
-async function fetchRepoGifs(
+async function fetchRepoMedia(
   hfId: string,
   limit: number,
   signal?: AbortSignal,
 ): Promise<PreviewImage[]> {
   const tree = await getJson<TreeEntry[]>(`${HF}/api/datasets/${hfId}/tree/main?recursive=true`, signal);
-  return tree
-    .filter((f) => f.type === 'file' && /\.gif$/i.test(f.path) && (f.size ?? 0) <= MAX_GIF_BYTES)
-    .slice(0, limit)
-    .map((f) => ({
-      src: `${HF}/datasets/${hfId}/resolve/main/${f.path.split('/').map(encodeURIComponent).join('/')}`,
-      width: 0,
-      height: 0,
-    }));
+  const url = (path: string) =>
+    `${HF}/datasets/${hfId}/resolve/main/${path.split('/').map(encodeURIComponent).join('/')}`;
+  const files = tree.filter((f) => f.type === 'file');
+  const pick = (re: RegExp, max: number, kind: 'image' | 'video'): PreviewImage[] =>
+    files
+      .filter((f) => re.test(f.path) && (f.size ?? 0) <= max)
+      .map((f) => ({ src: url(f.path), width: 0, height: 0, kind }));
+  return [
+    ...pick(GIF_EXT, MAX_GIF_BYTES, 'image'),
+    ...pick(VIDEO_EXT, MAX_VIDEO_BYTES, 'video'),
+    ...pick(IMAGE_EXT, MAX_IMAGE_BYTES, 'image'),
+  ].slice(0, limit);
 }
 
 /** Returns up to `limit` sample images for an HF dataset id (e.g. "cifar10"). */
@@ -77,8 +90,8 @@ export async function fetchPreview(
   signal?: AbortSignal,
 ): Promise<PreviewImage[]> {
   try {
-    const gifs = await fetchRepoGifs(hfId, limit, signal);
-    if (gifs.length > 0) return gifs;
+    const media = await fetchRepoMedia(hfId, limit, signal);
+    if (media.length > 0) return media;
   } catch (e) {
     if ((e as Error).name === 'AbortError') throw e;
     // no repo listing (gated / not found): fall back to datasets-server
@@ -94,12 +107,14 @@ export async function fetchPreview(
     `${API}/first-rows?dataset=${ds}&config=${encodeURIComponent(first.config)}&split=${encodeURIComponent(first.split)}`,
     signal,
   );
-  const cols = (data.features ?? []).filter((f) => f.type?._type === 'Image').map((f) => f.name);
+  const cols = (data.features ?? [])
+    .filter((f) => f.type?._type === 'Image' || f.type?._type === 'Video')
+    .map((f) => ({ name: f.name, kind: f.type._type === 'Video' ? ('video' as const) : ('image' as const) }));
   const out: PreviewImage[] = [];
   for (const { row } of data.rows ?? []) {
     for (const c of cols) {
-      const v = row[c];
-      if (isImageCell(v)) out.push(v);
+      const v = row[c.name];
+      if (isMediaCell(v)) out.push({ ...v, kind: c.kind });
       if (out.length >= limit) return out;
     }
   }
