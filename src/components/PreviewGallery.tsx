@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react';
-import { fetchPreview, type PreviewImage } from '../lib/preview';
+import { fetchPreview, PreviewHttpError, type PreviewImage } from '../lib/preview';
 import type { Copy } from '../lib/i18n';
 
 type State =
   | { status: 'loading' }
   | { status: 'ready'; images: PreviewImage[] }
+  | { status: 'gated' }
   | { status: 'error' };
 
 export function PreviewGallery({ hfId, copy }: { hfId: string; copy: Copy }) {
@@ -16,13 +17,17 @@ export function PreviewGallery({ hfId, copy }: { hfId: string; copy: Copy }) {
     fetchPreview(hfId, 8, ctrl.signal)
       .then((images) => setState({ status: 'ready', images }))
       .catch((e: unknown) => {
-        if ((e as Error).name !== 'AbortError') setState({ status: 'error' });
+        if ((e as Error).name === 'AbortError') return;
+        const gated = e instanceof PreviewHttpError && (e.status === 401 || e.status === 403);
+        setState({ status: gated ? 'gated' : 'error' });
       });
     return () => ctrl.abort();
   }, [hfId]);
 
   if (state.status === 'loading')
     return <p className="mb-3 text-xs text-slate-500">{copy.previewLoading}</p>;
+  if (state.status === 'gated')
+    return <p className="mb-3 text-xs text-slate-500">{copy.previewGated}</p>;
   if (state.status === 'error')
     return <p className="mb-3 text-xs text-slate-500">{copy.previewError}</p>;
   if (state.images.length === 0)

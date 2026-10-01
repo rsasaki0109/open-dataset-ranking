@@ -19,9 +19,15 @@ interface FirstRows {
   rows?: { row: Record<string, unknown> }[];
 }
 
+export class PreviewHttpError extends Error {
+  constructor(public status: number) {
+    super(`HTTP ${status}`);
+  }
+}
+
 async function getJson<T>(url: string, signal?: AbortSignal): Promise<T> {
   const res = await fetch(url, { signal });
-  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  if (!res.ok) throw new PreviewHttpError(res.status);
   return (await res.json()) as T;
 }
 
